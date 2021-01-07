@@ -1,15 +1,56 @@
-import execa from 'execa';
+import { createReactApp } from "./create-react-app";
+import execa from "execa";
 
-// this function creates a react app in the current dir
-// if no project name is provided.
+const Listr = require("listr");
+const {
+  initialiseGit,
+  gitAddFiles,
+  gitCommit,
+  createGitRepo,
+  gitRemoteAdd,
+  renameBranch,
+  gitPush,
+} = require("./git");
 
-export async function createReactApp(args) {
-  try {
-    // checking if project name was provided
-    if(!args.project_name) {
-      await execa('npx', ['create-react-app', '.']);
-    }
-  } catch(e) {
-    console.error(e.toString());
-  }
+
+export async function projectInitiation(args, repo_url, commit_message) {
+  const tasks = new Listr([
+    {
+      title: "initialising git",
+      task: () => initialiseGit(args),
+    },
+    {
+      title: "creating react project",
+      task: () => execa('touch', ["index.html"]),
+    },
+    {
+      title: "adding files to git",
+      task: () => gitAddFiles(args),
+    },
+    {
+      title: "commit files",
+      task: () => gitCommit(commit_message),
+    },
+    // {
+    //   title: "creating github repo",
+    //   task: () => createGitRepo(username, repo_name),
+    // },
+    {
+      title: "renaming branch to main",
+      task: () => renameBranch(),
+    },
+    {
+      title: "git remote add",
+      task: () => gitRemoteAdd(repo_url),
+    },
+
+    {
+      title: "pushing to github",
+      task: () => gitPush(),
+    },
+  ]);
+
+  tasks.run().catch((err) => {
+    console.error(err);
+  });
 }

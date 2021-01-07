@@ -1,5 +1,9 @@
 import arg from 'arg';
-import { createReactApp } from './main';
+import chalk from 'chalk';
+import { createReactApp } from './create-react-app';
+import { projectInitiation } from './main';
+const { githubAuthentication } = require("./auth");
+
 // this function parses the arguments passed when
 // the rgg command is called
 function parseArguments(args) {
@@ -16,6 +20,17 @@ function parseArguments(args) {
 }
 export async function createProject(args) {
   const options = parseArguments(args);
-  await createReactApp(options);
+  if (options.git) {
+    const userDetails = await githubAuthentication();
+
+    const username = userDetails.username;
+    const repo_url = userDetails.repo_url;
+    const commit_message = userDetails.commit_message;
+  
+    await projectInitiation(options, repo_url, commit_message);
+  } else {
+    console.log(chalk.green("creating react project"));
+    await createReactApp(options);
+  }
   console.log(options);
 }
